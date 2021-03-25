@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta name="author" content="Alirio Freytez"/>
+	<title>Box Game | ES6 Practice</title>
+	<style>
+		* {
+			padding: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+		html {
+			font-family: Arial;
+			overflow-x: hidden;
+		}
+		main {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-content: center;
+			min-height: 100vh;
+			background: #000;
+		}
+		div#lobby {
+			z-index: 5;
+			position: absolute;
+			min-height: 100vh;
+			width: 100%;
+			cursor: pointer;
+			background: #f2f2f2;
+			transition: opacity .5s ease;
+		}
+		div.presentation {
+		}
+		div.presentation div.main,
+		div.win {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-content: center;
+			width: 100%;
+			height: 100vh;
+		}
+		div.presentation div.main {
+			min-height: calc(100vh - 62px);
+			height: auto;
+			padding-top: 62px;
+		}
+		div.presentation div.right {
+			width: 100%;
+			padding: 0 10px 20px 10px;
+		}
+		div.presentation h1,
+		div.win h2 {
+			width: 100%;
+			padding: 0 20px;
+			font-size: 40px;
+			font-weight: bold;
+			text-align: center;
+			text-transform: uppercase;
+			animation-name: presentation-h;
+			animation-duration: .5s;
+			animation-timing-function: ease;
+			animation-fill-mode: forwards;
+		}
+		p.advice {
+			width: 100%;
+			margin-top: 20px;
+			text-align: center;
+			color: #62d400;
+			opacity: 0;
+			animation-name: presentation-p;
+			animation-duration: .5s;
+			animation-delay: .5s;
+			animation-timing-function: ease;
+			animation-fill-mode: forwards;
+		}
+		div.presentation div.right p {
+			color: rgba(0,0,0,.8);
+			text-align: center;
+		}
+		div.presentation div.right p b {
+			font-weight: normal;
+			color: #02afb3;
+		}
+		div.presentation div.right p:last-child {
+			margin-top: 10px;
+			font-size: 12px;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+		}
+		div.win h2 {
+			animation-name: win-h;
+			animation-duration: 1s;
+			animation-timing-function: ease;
+			animation-iteration-count: infinite;
+			animation-direction: alternate;
+		}
+		div.win p.advice {
+			margin-top: 40px;
+		}
+		div.container,
+		div.direct-container,
+		div.xpand {
+			position: relative;
+			width: 100%;
+			height: 100%;
+			border-radius: 5px;
+			background: #fff;
+		}
+		div.container {
+			width: 300px;
+			height: 300px;
+			box-shadow: 0px 0px 30px 10px rgba(0,0,0,.05);
+		}
+		div.direct-container {
+			z-index: 3;
+			border: 2px solid transparent;
+		}
+		div.xpand {
+			z-index: 2;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			opacity: 1;
+			transition: opacity .2s ease, width .5s ease, height .5s ease;
+			transform: translate(-50%, -50%);
+		}
+		div.default-xpand {
+			z-index: 1;
+			width: 0;
+			height: 0;
+			background: #f2f2f2;
+			transition: width .5s ease, height .5s ease;
+		}
+		div.confeti {
+			z-index: 6;
+			position: absolute;
+			top: 0;
+			left: 0;
+			transform: translateY(0);
+			transition: opacity .5s ease;
+		}
+		button {
+			position: relative;
+			display: block;
+			width: 25px;
+			height: 25px;
+			cursor: pointer;
+			font-size: 15px;
+			font-family: Arial;
+			font-weight: bold;
+			border: none;
+			outline: none;
+			border-radius: 5px;
+			transition: left .1s ease, top .1s ease;
+		}
+		button.tired::before {
+			content: "Mucha corredera, ya me cansé...";
+			display: block;
+			position: absolute;
+			top: -60px;
+			left: 3px;
+			min-width: 130px;
+			padding: 10px 15px;
+			background: #f2f2f2;
+			color: rgba(0,0,0,.6);
+			box-shadow: 0 0 0 3px rgba(0,0,0,.15);
+			animation-name: tired;
+			animation-duration: 0.3s;
+			animation-fill-mode: forwards;
+			animation-timing-function: ease-out;
+		}
+
+		@keyframes tired {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+		@keyframes presentation-h {
+			from {
+				transform: scale(15);
+			}
+			to {
+				transform: scale(1);
+			}
+		}
+		@keyframes presentation-p {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+		@keyframes confeti {
+			from {
+				top: 0;
+			}
+			to {
+				top: 100%;
+				transform: translateY(-100%);
+			}
+		}
+		@keyframes win-h {
+			from {
+				transform: scale(1);
+			}
+			to {
+				transform: scale(2);
+			}
+		}
+
+		@media (max-width: 550px) {
+			h1 {
+				font-size: 30px;
+			}
+		}
+		@media (max-height: 350px) {
+			div.main {
+				padding-top: 31px;
+			}
+		}
+	</style>
+	<script>
+		window.onload = () => {
+			const colors = ["#fc036f","#fc03f0","#a503fc","#0314fc","#03e3fc","#03fcbe","#5afc03","#fcba03","#fc0303"];
+			const $main = document.querySelector("main");
+			const $lobby = document.querySelector("#lobby");
+			const $button = document.querySelector("#unique");
+			const $container = document.querySelector("#unique").parentElement;
+			const template = {
+				ini: {
+					class: "presentation",
+					html: `<div class="main">
+						<h1>¿Puedes hacer click en el cuadrito?</h1>
+						<p class="advice">Haz click en donde quieras para comenzar</p>
+					</div>
+					<div class="right">
+						<p>Hecho por <b>Alirio Freytez</b></p>
+						<p>P.D.: No aguanto la cuarentena.</p>
+					</div>`
+				},
+				win: {
+					class: "win",
+					html: `<h2>¡Ganaste!</h2>
+					<p class="advice">Haz click en donde quieras para jugar de nuevo</p>`
+				}
+			}
+			let confeti = [];
+			let winnerTry = 0;
+			let tryNumber = 0;
+
+			const randomNumber = (min, max) => Math.floor((Math.random() * (max - min + 1)) + min);
+			const randomPosition = (actual, min, max) => {
+				const newP = randomNumber(min, max);
+
+				return (newP < actual - 10 || actual + 10< newP) ? newP : randomPosition(actual, min, max);
+			};
+			const newPosition = function () {
+				const maxRange = this.parentElement.offsetWidth - 2 - this.offsetWidth;
+
+				return {x: randomPosition(this.offsetLeft, 0, maxRange), y: randomPosition(this.offsetTop, 0, maxRange)};
+			};
+			const newColor = function (currentColor) {
+				const newCol = colors[randomNumber(0, colors.length-1)];
+
+				return (newCol != currentColor) ? newCol : newColor(currentColor);
+			};
+			const animColorExpansion = function () {
+				const div = document.createElement("div");
+				const parent = this.parentElement.parentElement;
+
+				/* Configuración del elemento */
+
+				// Adición del elemento al árbol del dom.
+				div.classList.add("xpand");
+				parent.appendChild(div);
+				div.style.backgroundColor = this.style.backgroundColor;
+
+				// Expansión.
+				setTimeout(() => {
+					div.style.width = `${window.screen.width}px`;
+					div.style.height = `${window.screen.height}px`;
+				}, 10);
+
+				// Eliminación del elemento.
+				setTimeout(() => {
+					div.style.opacity = 0;
+					setTimeout(() => parent.removeChild(div), 200);
+				}, 500);
+			}; 
+			const moveTo = function () {
+				if (tryNumber == winnerTry) {
+					this.classList.add("tired");
+					return;
+				}
+
+				// Nueva información.
+				const newPos = newPosition.call(this);
+				const newCol = newColor(this.getAttribute("data-color") || "");
+
+				// Colorización.
+				this.parentElement.style.borderColor = newCol;
+				this.style.backgroundColor = newCol;
+				this.setAttribute("data-color", newCol);
+
+				// Animación: expansión de color.
+				if (this.hasAttribute("data-start")) {
+					const defaultXpand = document.querySelector(".default-xpand");
+					defaultXpand.style.width = "100%";
+					defaultXpand.style.height = "100%";
+					this.removeAttribute("data-start");
+				} else {
+					animColorExpansion.call(this);
+
+					// Incrementamos el contador de intentos
+					tryNumber++;
+				}
+
+				// Posicionamiento.
+				this.style.left = `${newPos.x}px`;
+				this.style.top = `${newPos.y}px`;
+			};
+			const changeView = function (view) {
+				$lobby.className = view.class;
+				$lobby.innerHTML = view.html;
+				$lobby.style.display = (view.class == "win") ? "flex" : "block";
+				setTimeout(() => $lobby.style.opacity = 1, 0);
+			}
+			const generateConfeti = function () {
+				const maxElementSize = 20;
+				const elements = [];
+				const elementNumber = parseInt(window.screen.width / maxElementSize);
+
+				// Definición del tamaño y cantidad de elementos.
+				for (let i = 0; i < elementNumber; i++) {
+					const min = maxElementSize - 5;
+					const width = randomNumber((min <= 0) ? 5 : min, maxElementSize);
+					const height = randomNumber(randomNumber(5, 20), randomNumber(21, 35));
+					const posX = randomNumber(0, document.querySelector("main").clientWidth - width);
+					const confetiFragment = document.createElement("div");
+
+					// Configuración del fragmento de confeti.
+					confetiFragment.classList.add("confeti");
+					confetiFragment.style.backgroundColor = newColor();
+					confetiFragment.style.width = `${width}px`;
+					confetiFragment.style.height = `${height}px`;
+					confetiFragment.style.top = `-${height}px`;
+					confetiFragment.style.left = `${posX}px`;
+					confetiFragment.style.animationName = "confeti";
+					confetiFragment.style.animationDelay = `${(Math.random() * (3 - 0 + 1)).toFixed(1)}s`;
+					confetiFragment.style.animationDuration = "2s";
+					confetiFragment.style.animationTimingFunction = "ease-out";
+					confetiFragment.style.animationFillMode = "forwards";
+
+					elements.push(confetiFragment);
+				}
+
+				return elements;
+			};
+			const iniGame = function () {
+				const main = document.querySelector("main");
+				const defaultXpandRef = document.querySelector(".default-xpand");
+				const defaultXpand = document.createElement("div");
+
+				// Reestablecemos elemento default-xpand.
+				defaultXpand.style.width = "300px";
+				defaultXpand.style.height = "300px";
+				defaultXpand.classList.add("default-xpand");
+				defaultXpand.classList.add("xpand");
+				main.removeChild(defaultXpandRef);
+				main.appendChild(defaultXpand);
+
+				// Reestablecemos botón del juego.
+				$button.setAttribute("data-start", "letsgo");
+				$button.setAttribute("data-color", "");
+				$button.className = "";
+
+				// Reestablecemos el número de intentos necesarios para ganar.
+				winnerTry = randomNumber(randomNumber(15, 30), randomNumber(31, 50));
+				tryNumber = 0;
+				
+				// Iniciamos animación inicial del juego.
+				setTimeout(moveTo.call($button), 3000);
+
+				console.log(`Si estás aquí es porque quieres saber cuántos intentos debes hacer.\nDebes intentar: ${winnerTry} veces`);
+			};
+			const winGame = function () {
+				// Lanzamos confetiiii!
+				confeti.forEach(e => $main.appendChild(e));
+
+				// Mostramos mensaje de felitaciones.
+				changeView(template.win);
+			};
+
+			const ini = function() {
+				document.querySelector("html").style.overflow = "hidden";
+				$button.addEventListener("mouseenter", moveTo, false);
+				$button.addEventListener("click", win, false);
+				// Creamos el confeti que se mostrará al ganar.
+				confeti = generateConfeti();
+				
+				// Ocultamos lobby element.
+				this.style.opacity = 0;
+				setTimeout(function() {
+					this.style.display = "none";
+				}.bind(this), 500);
+
+				// Iniciamos juego.
+				iniGame();
+			};
+			const removeConfeti = function () {
+				const confeti = document.querySelectorAll(".confeti");
+				
+				// Eliminamos todos los fragmentos de confeti.
+				confeti.forEach(e => {
+					e.style.opacity = 0;
+					setTimeout(() => $main.removeChild(e), 500);
+				});
+
+				$lobby.removeEventListener("click", removeConfeti, false);
+			};
+			const win = function () {
+				$button.removeEventListener("click", win, false);
+				$lobby.addEventListener("click", removeConfeti, false);
+
+				// Finalizamos juego.
+				winGame();
+
+			};
+			$lobby.addEventListener("click", ini, false);
+			changeView(template.ini);
+		};
+	</script>
+</head>
+<body>
+	<main>
+		<div id="lobby"></div>
+		<div class="xpand default-xpand"></div>
+		<div class="container">
+			<div class="direct-container">
+				<button type="button" id="unique"></button>
+			</div>
+		</div>
+	</main>
+</body>
+</html>
